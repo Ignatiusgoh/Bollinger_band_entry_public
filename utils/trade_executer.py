@@ -90,6 +90,4 @@ class BinanceFuturesTrader:
             logging.error(f"An error occurred in BinanceFuturesTrader.set_take_profit_limit | Error: {e}")
             raise
 
-trade = BinanceFuturesTrader()
-trade.place_market_order('SOLUSDT',"BUY",1)
 

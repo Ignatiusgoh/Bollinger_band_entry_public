@@ -2,7 +2,7 @@ from utils.websocket_handler import candle_stream
 from utils.logger import init_logger
 from time import sleep
 import utils.indicator_cache as indicator 
-import utils.binancehelpers as binance
+# import utils.binancehelpers as binance
 import utils.trade_executer as execute
 import asyncio, logging, websockets
 from utils.supabase_client import log_into_supabase
@@ -16,7 +16,7 @@ supabase_api_key = os.getenv("SUPABASE_API_KEY")
 supbase_jwt = os.getenv("SUPABASE_JWT")
 
 symbol = "SOLUSDT"
-interval = "1m"
+interval = "5m"
 risk_amount = 5
 sl_percentage = 0.2
 risk_reward_ratio = 2.5
@@ -35,7 +35,6 @@ async def main():
     historical_data = cache.fetch_historical_data(symbol=symbol, interval=interval, limit=100)
     cache = indicator.CandleCache(historical_data=historical_data)
     group_id = 0
-
     async for candle in candle_stream(symbol, interval):   # ← stays connected
         
         cache.add_candle(candle)
