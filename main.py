@@ -5,7 +5,7 @@ import utils.indicator_cache as indicator
 import utils.binancehelpers as binance
 import utils.trade_executer as execute
 import asyncio, logging, websockets
-from utils.supabase_client import log_into_supabase
+from utils.supabase_client import log_into_supabase, get_latest_group_id
 import os
 from dotenv import load_dotenv
 
@@ -34,7 +34,7 @@ async def main():
     cache = indicator.CandleCache()
     historical_data = cache.fetch_historical_data(symbol=symbol, interval=interval, limit=100)
     cache = indicator.CandleCache(historical_data=historical_data)
-    group_id = 0
+    group_id = get_latest_group_id(supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
     async for candle in candle_stream(symbol, interval):   # ← stays connected
         
         cache.add_candle(candle)
@@ -75,7 +75,7 @@ async def main():
                     "group_id": group_id,
                     "order_id": market_in_order_id,
                     "type": "MO",
-                    "side": "LONG",
+                    "direction": "LONG",
                     "breakeven_threshold": 0.00,
                     "breakeven_price": 0.00
                 }
@@ -121,7 +121,7 @@ async def main():
                     "group_id": group_id,
                     "order_id": stoploss_order_id,
                     "type": "SL",
-                    "side": "LONG",
+                    "direction": "LONG",
                     "breakeven_threshold": breakeven_indicator,
                     "breakeven_price": breakeven_price
                 }
@@ -138,7 +138,7 @@ async def main():
                     "group_id": group_id,
                     "order_id": takeprofit_order_id,
                     "type": "TP",
-                    "side": "LONG",
+                    "direction": "LONG",
                     "breakeven_threshold": 0.00,
                     "breakeven_price": 0.00
                 }
