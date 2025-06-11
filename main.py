@@ -173,7 +173,7 @@ async def main():
                     "group_id": group_id,
                     "order_id": market_in_order_id,
                     "type": "MO",
-                    "side": "SHORT",
+                    "direction": "SHORT",
                     "breakeven_threshold": 0.00,
                     "breakeven_price": 0.00
                 }
@@ -215,7 +215,7 @@ async def main():
                     "group_id": group_id,
                     "order_id": stoploss_order_id,
                     "type": "SL",
-                    "side": "SHORT",
+                    "direction": "SHORT",
                     "breakeven_threshold": breakeven_indicator,
                     "breakeven_price": breakeven_price
                 }
@@ -232,7 +232,7 @@ async def main():
                     "group_id": group_id,
                     "order_id": takeprofit_order_id,
                     "type": "TP",
-                    "side": "SHORT",
+                    "direction": "SHORT",
                     "breakeven_threshold": 0.00,
                     "breakeven_price": 0.00
                 }
