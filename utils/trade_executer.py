@@ -48,7 +48,6 @@ class BinanceFuturesTrader:
         for attempt in range(1, self.max_retries + 1):
             try: 
                 self.res = self._post('/fapi/v1/order', params)
-                time.sleep(2)
                 if 'orderId' in self.res:
                     logging.info(f"Successfully executed MARKET IN ORDER with ID: {self.res['orderId']}")
                     return self.res 
@@ -74,7 +73,6 @@ class BinanceFuturesTrader:
         for attempt in range(1, self.max_retries + 1):
             try:
                 self.res = self._post('/fapi/v1/order', params)
-                time.sleep(2)
                 if 'orderId' in self.res:
                     logging.info(f"Successfully executed STOPLOSS ORDER with ID: {self.res['orderId']}")
                 else:
@@ -104,7 +102,6 @@ class BinanceFuturesTrader:
         for attempt in range(1, self.max_retries + 1):
             try:
                 self.res = self._post('/fapi/v1/order', params)
-                time.sleep(2)
                 if 'orderId' in self.res:
                     logging.info(f"Successfully executed TAKEPROFIT ORDER with ID: {self.res['orderId']}")
                 else:
