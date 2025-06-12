@@ -14,6 +14,8 @@ class BinanceFuturesTrader:
     def __init__(self):
         self.api_key = os.getenv('BINANCE_API_KEY')
         self.api_secret = os.getenv('BINANCE_API_SECRET')
+        self.max_retries = 10
+        self.retry_delays = 2
 
     def _sign(self, params):
         query_string = '&'.join([f"{k}={v}" for k, v in params.items()])
@@ -43,14 +45,21 @@ class BinanceFuturesTrader:
             'type': 'MARKET',
             'quantity': quantity
         }
-        logging.info(f"Params: {params}")
-        try: 
-            self.res = self._post('/fapi/v1/order', params)
-            logging.info(f"Successfully executed MARKET IN ORDER with ID: {self.res['orderId']}")
-            return self.res 
-        except Exception as e:
-            logging.error(f"An error occurred in BinanceFuturesTrader.place_market_order | Error: {e}")
-            raise
+        for attempt in range(1, self.max_retries + 1):
+            try: 
+                self.res = self._post('/fapi/v1/order', params)
+                time.sleep(2)
+                if 'orderId' in self.res:
+                    logging.info(f"Successfully executed MARKET IN ORDER with ID: {self.res['orderId']}")
+                    return self.res 
+                else:
+                    logging.warning(f"MARKET IN order response missing orderId: {self.res}")
+            except Exception as e:
+                logging.error(f"[Attempt {attempt}] Failed to MARKET IN | Error: {e}")
+                if attempt == self.max_retries:
+                    logging.critical("Max retries reached. Giving up.")
+                    raise
+                time.sleep(self.retry_delay)
 
     def set_stop_loss(self, symbol, side, stop_price, quantity):
         params = {
@@ -61,13 +70,22 @@ class BinanceFuturesTrader:
             'quantity': quantity,
             'timeInForce': 'GTC'
         }
-        try:
-            self.res = self._post('/fapi/v1/order', params)
-            logging.info(f"Successfully executed STOPLOSS ORDER with ID: {self.res['orderId']}")
-            return self.res
-        except Exception as e:
-            logging.error(f"An error occurred in BinanceFuturesTrader.set_stop_loss | Error: {e}")
-            raise
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                self.res = self._post('/fapi/v1/order', params)
+                time.sleep(2)
+                if 'orderId' in self.res:
+                    logging.info(f"Successfully executed STOPLOSS ORDER with ID: {self.res['orderId']}")
+                else:
+                    logging.warning(f"STOPLOSS order response missing orderId: {self.res}")
+                return self.res
+            except Exception as e:
+                logging.error(f"[Attempt {attempt}] Failed to set stop loss | Error: {e}")
+                if attempt == self.max_retries:
+                    logging.critical("Max retries reached. Giving up.")
+                    raise
+                time.sleep(self.retry_delay)
 
     def set_take_profit_limit(self, symbol, side, stop_price, price, quantity): 
         # stop_price is when the order is triggered, price is the limit price 
@@ -82,12 +100,20 @@ class BinanceFuturesTrader:
             'quantity': quantity,
             'timeInForce': 'GTC'
         }
-        try:
-            self.res = self._post('/fapi/v1/order', params)
-            logging.info(f"Successfully executed TAKEPROFIT ORDER with ID: {self.res['orderId']}")
-            return self.res
-        except Exception as e:
-            logging.error(f"An error occurred in BinanceFuturesTrader.set_take_profit_limit | Error: {e}")
-            raise
 
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                self.res = self._post('/fapi/v1/order', params)
+                time.sleep(2)
+                if 'orderId' in self.res:
+                    logging.info(f"Successfully executed TAKEPROFIT ORDER with ID: {self.res['orderId']}")
+                else:
+                    logging.warning(f"TAKEPROFIT order response missing orderId: {self.res}")
+                return self.res
+            except Exception as e:
+                logging.error(f"[Attempt {attempt}] Failed to set TAKEPROFIT | Error: {e}")
+                if attempt == self.max_retries:
+                    logging.critical("Max retries reached. Giving up.")
+                    raise
+                time.sleep(self.retry_delay)
 
