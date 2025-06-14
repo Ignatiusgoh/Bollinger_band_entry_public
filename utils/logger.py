@@ -2,7 +2,7 @@ import logging
 
 def init_logger():
     logging.basicConfig(
-        filename='bot.log',  # Log file name
+        filename='execution.log',  # Log file name
         filemode='a',        # Append mode
         format='%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s | %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
