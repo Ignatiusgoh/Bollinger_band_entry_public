@@ -42,7 +42,7 @@ def get_latest_group_id(supabase_url, api_key, jwt, table_name="order_groups"):
         if results:
             return results[0].get("group_id", 0)
         else:
-            return 0
+            return 1
     else:
         print(f"❌ Failed to fetch latest group_id ({response.status_code}): {response.text}")
         return 0
