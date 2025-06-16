@@ -47,6 +47,27 @@ class CandleCache:
             "upper": upper_band,
             "lower": lower_band
         }
+    
+    def calculate_rsi(self, period: int = 14):
+        """Calculate the Relative Strength Index (RSI)."""
+        closes = self.get_last_n_closes(period + 1)  # Need period+1 prices to compute changes
+        if closes is None:
+            return None  # Not enough data yet
+
+        # Calculate price differences
+        deltas = np.diff(closes)
+        gains = np.where(deltas > 0, deltas, 0)
+        losses = np.where(deltas < 0, -deltas, 0)
+
+        avg_gain = np.mean(gains)
+        avg_loss = np.mean(losses)
+
+        if avg_loss == 0:
+            return 100  # Prevent division by zero, RSI is 100 if no losses
+
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        return rsi
 
     def calculate_relative_volume(self):
         """ Calculate the Relative Volume (RV) based on the last 'volume_period' candles. """

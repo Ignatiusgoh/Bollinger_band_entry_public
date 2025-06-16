@@ -23,6 +23,9 @@ risk_reward_ratio = 2.9
 # breakeven_indicator_ratio = 0.1
 fee = 0.07
 portfolio_threshold = 20
+rsi_lower = 30
+rsi_upper = 70
+
 
 usdt_entry_size = risk_amount / ((sl_percentage + fee) / 100)
 tp_percentage = ((sl_percentage + fee) * risk_reward_ratio) + fee
@@ -39,11 +42,17 @@ async def main():
         
         cache.add_candle(candle)
         bb = cache.calculate_bollinger_bands()
+        rsi = cache.calculate_rsi()
 
         if bb is not None:
             logging.info(f"BB Upper: {bb['upper']} BB Lower: {bb['lower']}")
         else:
             logging.info("BB: None")
+        
+        if rsi is not None: 
+            logging.info(f"RSI: {rsi}")
+        else: 
+            logging.info("RSI: None")
         
         percentage_at_risk = binance.percentage_at_risk(risk_amount)
         logging.info(f"Portfolio risk: {percentage_at_risk}")
@@ -54,7 +63,7 @@ async def main():
             last_close = cache.candles[-1]['close']
             sol_entry_size = round(usdt_entry_size / last_close,2)
 
-            if last_close <= bb['lower']:
+            if last_close <= bb['lower'] and rsi <= rsi_lower:
                 
                 logging.info("Close price lower than lower bollinger band ... Entering LONG")
                 logging.info(f"Close price: {last_close}")
@@ -154,7 +163,7 @@ async def main():
                 group_id += 1 
 
 
-            elif last_close >= bb['upper']:
+            elif last_close >= bb['upper'] and rsi >= rsi_upper:
 
                 logging.info("Close price higher than upper bollinger band ... Entering SHORT")
                 logging.info(f"Close price: {last_close}")
