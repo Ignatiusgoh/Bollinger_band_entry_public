@@ -17,16 +17,16 @@ supbase_jwt = os.getenv("SUPABASE_JWT")
 
 symbol = "SOLUSDT"
 interval = "1m"
-risk_amount = 5
-sl_percentage = 0.2
-risk_reward_ratio = 2.5
-breakeven_indicator_ratio = 0.1
+risk_amount = 2
+sl_percentage = 0.4
+risk_reward_ratio = 2.9
+# breakeven_indicator_ratio = 0.1
 fee = 0.07
 portfolio_threshold = 20
 
 usdt_entry_size = risk_amount / ((sl_percentage + fee) / 100)
 tp_percentage = ((sl_percentage + fee) * risk_reward_ratio) + fee
-breakeven_indicator_percentage = sl_percentage * breakeven_indicator_ratio
+# breakeven_indicator_percentage = sl_percentage * breakeven_indicator_ratio
 trade = execute.BinanceFuturesTrader()
 
 async def main():
@@ -113,8 +113,9 @@ async def main():
                     return e
                 
                 # Breakeven calculations
-                breakeven_indicator = round(actual_entry_price + (actual_entry_price * breakeven_indicator_percentage / 100),2)
+                # breakeven_indicator = round(actual_entry_price + (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price + (actual_entry_price * fee / 100),2)
+                breakeven_indicator = breakeven_price + 0.01
 
                 # Log SL into DB 
                 data = {
@@ -206,8 +207,9 @@ async def main():
                     return e
                 
                 # Breakeven calculations
-                breakeven_indicator = round(actual_entry_price - (actual_entry_price * breakeven_indicator_percentage / 100),2)
+                # breakeven_indicator = round(actual_entry_price - (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price - (actual_entry_price * fee / 100),2)
+                breakeven_indicator = breakeven_price + 0.01 
 
                 # Log SL into DB 
                 # Log SL into DB 
