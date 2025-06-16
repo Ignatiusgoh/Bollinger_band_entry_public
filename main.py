@@ -209,7 +209,7 @@ async def main():
                 # Breakeven calculations
                 # breakeven_indicator = round(actual_entry_price - (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price - (actual_entry_price * fee / 100),2)
-                breakeven_indicator = breakeven_price + 0.01 
+                breakeven_indicator = breakeven_price - 0.01 
 
                 # Log SL into DB 
                 # Log SL into DB 
