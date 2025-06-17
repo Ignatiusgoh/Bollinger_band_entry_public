@@ -16,7 +16,7 @@ supabase_api_key = os.getenv("SUPABASE_API_KEY")
 supbase_jwt = os.getenv("SUPABASE_JWT")
 
 symbol = "SOLUSDT"
-interval = "1m"
+interval = "5m"
 risk_amount = 2
 sl_percentage = 0.4
 risk_reward_ratio = 2.9
