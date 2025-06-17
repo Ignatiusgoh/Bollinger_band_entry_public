@@ -68,3 +68,4 @@ def entry_price(order_id):
         except requests.exceptions.RequestException as e:
             logging.warning(f"⚠️ Error fetching positions: {e}. Retrying")
             time.sleep(0.1)
+

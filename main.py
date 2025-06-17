@@ -96,6 +96,7 @@ async def main():
                 except Exception as e:
                     logging.error(f"Failed to log MARKET IN trade to Supabase: {e}")
                 
+                sleep(2)
                 actual_entry_price = binance.entry_price(market_in_order_id)
 
                 stoploss_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
@@ -194,6 +195,7 @@ async def main():
                 except Exception as e:
                     logging.error(f"Failed to log MARKET IN trade to Supabase: {e}")
 
+                sleep(2)
                 actual_entry_price = binance.entry_price(market_in_order_id)
                 
                 stoploss_price = round(actual_entry_price + (actual_entry_price * sl_percentage / 100),2)

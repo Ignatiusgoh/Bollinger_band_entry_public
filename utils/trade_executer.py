@@ -113,4 +113,5 @@ class BinanceFuturesTrader:
                     logging.critical("Max retries reached. Giving up.")
                     raise
                 time.sleep(self.retry_delay)
+                
 
