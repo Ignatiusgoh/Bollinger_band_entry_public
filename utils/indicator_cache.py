@@ -3,7 +3,7 @@ from collections import deque
 import requests, time 
 
 class CandleCache:
-    def __init__(self, max_candles: int = 100, volume_period: int = 12, historical_data: list = None):
+    def __init__(self, max_candles: int = 200, volume_period: int = 12, historical_data: list = None):
         self.candles = deque(maxlen=max_candles)
         self.volume_period = volume_period
 
