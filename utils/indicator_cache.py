@@ -49,21 +49,27 @@ class CandleCache:
         }
     
     def calculate_rsi(self, period: int = 14):
-        """Calculate the Relative Strength Index (RSI)."""
-        closes = self.get_last_n_closes(period + 1)  # Need period+1 prices to compute changes
-        if closes is None:
-            return None  # Not enough data yet
+        """Calculate the Relative Strength Index (RSI) using Wilder's smoothing method."""
+        closes = self.get_last_n_closes(period + 100)  # Get more data for smoothing
+        if closes is None or len(closes) < period + 1:
+            return None  # Not enough data
 
-        # Calculate price differences
         deltas = np.diff(closes)
         gains = np.where(deltas > 0, deltas, 0)
         losses = np.where(deltas < 0, -deltas, 0)
 
-        avg_gain = np.mean(gains)
-        avg_loss = np.mean(losses)
+        # First average gain/loss
+        avg_gain = np.mean(gains[:period])
+        avg_loss = np.mean(losses[:period])
+
+        for i in range(period, len(gains)):
+            gain = gains[i]
+            loss = losses[i]
+            avg_gain = (avg_gain * (period - 1) + gain) / period
+            avg_loss = (avg_loss * (period - 1) + loss) / period
 
         if avg_loss == 0:
-            return 100  # Prevent division by zero, RSI is 100 if no losses
+            return 100
 
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))

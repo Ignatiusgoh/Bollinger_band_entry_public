@@ -35,8 +35,8 @@ trade = execute.BinanceFuturesTrader()
 async def main():
     init_logger()
     cache = indicator.CandleCache()
-    historical_data = cache.fetch_historical_data(symbol=symbol, interval=interval, limit=100)
-    cache = indicator.CandleCache(historical_data=historical_data)
+    historical_data = cache.fetch_historical_data(symbol=symbol, interval=interval, limit=150)
+    cache = indicator .CandleCache(historical_data=historical_data)
     group_id = get_latest_group_id(supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
     group_id += 1
     async for candle in candle_stream(symbol, interval):   # ← stays connected
