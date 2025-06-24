@@ -19,7 +19,7 @@ symbol = "SOLUSDT"
 interval = "5m"
 risk_amount = 2
 sl_percentage = 0.4
-risk_reward_ratio = 2.9
+# risk_reward_ratio = 2.9
 # breakeven_indicator_ratio = 0.1
 fee = 0.07
 portfolio_threshold = 20
@@ -28,7 +28,7 @@ rsi_upper = 70
 
 
 usdt_entry_size = risk_amount / ((sl_percentage + fee) / 100)
-tp_percentage = ((sl_percentage + fee) * risk_reward_ratio) + fee
+# tp_percentage = ((sl_percentage + fee) * risk_reward_ratio) + fee
 # breakeven_indicator_percentage = sl_percentage * breakeven_indicator_ratio
 trade = execute.BinanceFuturesTrader()
 
@@ -48,7 +48,7 @@ async def main():
         rsi = cache.calculate_rsi()
 
         if bb is not None:
-            logging.info(f"BB Upper: {bb['upper']} BB Lower: {bb['lower']}")
+            logging.info(f"BB Upper: {bb['upper']} BB Lower: {bb['lower']} SMA: {bb['sma']}")
         else:
             logging.info("BB: None")
         
@@ -103,7 +103,8 @@ async def main():
                 actual_entry_price = binance.entry_price(market_in_order_id)
 
                 stoploss_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
-                takeprofit_price = round(actual_entry_price + (actual_entry_price * tp_percentage / 100),2)
+                # takeprofit_price = round(actual_entry_price + (actual_entry_price * tp_percentage / 100),2)
+                takeprofit_price = bb['sma']
 
                 try: 
                     stoploss_order = trade.set_stop_loss(symbol=symbol, side="SELL", stop_price=stoploss_price, quantity=sol_entry_size)
@@ -199,7 +200,8 @@ async def main():
                 actual_entry_price = binance.entry_price(market_in_order_id)
                 
                 stoploss_price = round(actual_entry_price + (actual_entry_price * sl_percentage / 100),2)
-                takeprofit_price = round(actual_entry_price - (actual_entry_price * tp_percentage / 100),2)
+                # takeprofit_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
+                takeprofit_price = bb['sma']
 
                 try:
                     stoploss_order = trade.set_stop_loss(symbol=symbol, side="BUY", stop_price=stoploss_price, quantity=sol_entry_size)
