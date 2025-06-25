@@ -104,7 +104,7 @@ async def main():
 
                 stoploss_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
                 # takeprofit_price = round(actual_entry_price + (actual_entry_price * tp_percentage / 100),2)
-                takeprofit_price = bb['sma']
+                takeprofit_price = round(bb['sma'],2)
 
                 try: 
                     stoploss_order = trade.set_stop_loss(symbol=symbol, side="SELL", stop_price=stoploss_price, quantity=sol_entry_size)
@@ -201,7 +201,7 @@ async def main():
                 
                 stoploss_price = round(actual_entry_price + (actual_entry_price * sl_percentage / 100),2)
                 # takeprofit_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
-                takeprofit_price = bb['sma']
+                takeprofit_price = round(bb['sma'],2) 
 
                 try:
                     stoploss_order = trade.set_stop_loss(symbol=symbol, side="BUY", stop_price=stoploss_price, quantity=sol_entry_size)
