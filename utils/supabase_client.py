@@ -1,6 +1,10 @@
 import requests
 import time
 import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def log_into_supabase(data, supabase_url, api_key, jwt, table_name="order_groups"):
     logging.info(f"Attempting to log the following data into supabase: {data}")
@@ -57,4 +61,48 @@ def get_latest_group_id(supabase_url, api_key, jwt, table_name="order_groups"):
     else:
         logging.error(f"❌ Failed to fetch latest group_id ({response.status_code}): {response.text}")
         return 0
+    
+def get_latest_trades(supabase_url, api_key, jwt, table_name="trades"):
+    '''
+    Returns the most recent trades in trades table 
+    If no trades, return None
+    '''
+    url = f"{supabase_url}/rest/v1/{table_name}"
+    headers = {
+        "apikey": api_key,
+        "Authorization": f"Bearer {jwt}",
+        "Content-Type": "application/json",
+    }
 
+    params = {
+        "select": "entry_time,exit_time,is_closed,realized_pnl",
+        "order": "entry_time.desc",
+        "limit": 5
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        results = response.json()
+        print(results)
+        if results:
+            return results
+        else:
+            return None
+    else:
+        logging.error(f"❌ Failed to fetch latest trades ({response.status_code}): {response.text}")
+        return None
+    
+supabase_url = os.getenv("SUPABASE_URL")
+order_table_name = os.getenv("ORDER_TABLE")
+supabase_api_key = os.getenv("SUPABASE_API_KEY")
+supbase_jwt = os.getenv("SUPABASE_JWT")
+   
+if __name__ == '__main__':
+    supabase_url = os.getenv("SUPABASE_URL")
+    order_table_name = os.getenv("ORDER_TABLE")
+    supabase_api_key = os.getenv("SUPABASE_API_KEY")
+    supbase_jwt = os.getenv("SUPABASE_JWT")
+
+    test = get_latest_trade_time(supabase_url,supabase_api_key,supbase_jwt)
+    print(test)

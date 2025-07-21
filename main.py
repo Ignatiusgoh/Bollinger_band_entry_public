@@ -5,38 +5,40 @@ import utils.indicator_cache as indicator
 import utils.binancehelpers as binance
 import utils.trade_executer as execute
 import asyncio, logging, websockets
-from utils.supabase_client import log_into_supabase, get_latest_group_id
+from utils.supabase_client import log_into_supabase, get_latest_group_id, get_latest_trades
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
-supabase_url = "https://dpiygxjxrqliujdupyxf.supabase.co"
-table_name = "order_groups"
+
+supabase_url = os.getenv("SUPABASE_URL")
+order_table_name = os.getenv("ORDER_TABLE")
 supabase_api_key = os.getenv("SUPABASE_API_KEY")
 supbase_jwt = os.getenv("SUPABASE_JWT")
 
 symbol = "SOLUSDT"
 interval = "5m"
 risk_amount = 2
-sl_percentage = 1.1
-# risk_reward_ratio = 2.9
-# breakeven_indicator_ratio = 0.1
-fee = 0.07
+sl_percentage = 0.5
+fee = 0.08
 portfolio_threshold = 20
 rsi_lower = 30
 rsi_upper = 70
-
+sma_period = 30
+bb_std_dev = 2
+breakeven_buffer = 0.03
+rsi_period = 7
+max_concurrent_trades = 3
 
 usdt_entry_size = risk_amount / ((sl_percentage + fee) / 100)
-# tp_percentage = ((sl_percentage + fee) * risk_reward_ratio) + fee
-# breakeven_indicator_percentage = sl_percentage * breakeven_indicator_ratio
 trade = execute.BinanceFuturesTrader()
 
 async def main():
     init_logger()
     cache = indicator.CandleCache()
     historical_data = cache.fetch_historical_data(symbol=symbol, interval=interval, limit=150)
-    cache = indicator .CandleCache(historical_data=historical_data)
+    cache = indicator.CandleCache(historical_data=historical_data)
     
     async for candle in candle_stream(symbol, interval):   # ← stays connected
 
@@ -44,8 +46,8 @@ async def main():
         group_id += 1    
         
         cache.add_candle(candle)
-        bb = cache.calculate_bollinger_bands()
-        rsi = cache.calculate_rsi()
+        bb = cache.calculate_bollinger_bands(period = sma_period, num_std_dev = bb_std_dev)
+        rsi = cache.calculate_rsi(period = rsi_period)
 
         if bb is not None:
             logging.info(f"BB Upper: {bb['upper']} BB Lower: {bb['lower']} SMA: {bb['sma']}")
@@ -60,13 +62,35 @@ async def main():
         percentage_at_risk = binance.percentage_at_risk(risk_amount)
         logging.info(f"Portfolio risk: {percentage_at_risk}")
 
+        recent_trades = get_latest_trades(supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+        
+        #######
+        # Cooldown after loss 
+        # Ensure no trades made within the next 5 mins after a loss 
+        #######
+        if recent_trades[0]['is_closed'] == True:
+            if recent_trades[0]['realised_pnl'] < 0:
+                last_exit_time = datetime.strptime(recent_trades[0]['exit_time'], "%Y-%m-%dT%H:%M:%S.%f")
+                now = datetime.utcnow()
+                difference_seconds = (now - last_exit_time).total_seconds()
+                if difference_seconds < 300: 
+                    continue
+
+        #######
+        # Max concurrent trades
+        #######
+        open_trades = sum(1 for trade in recent_trades if not trade['is_closed'])
+        if open_trades > max_concurrent_trades: 
+            continue
+
         if percentage_at_risk < portfolio_threshold: 
             
             logging.info(f"Portfolio risk: {percentage_at_risk} percent lower than threshold: {portfolio_threshold}, looking for entry")
             last_close = cache.candles[-1]['close']
+            prev_close = cache.candles[-2]['close']
             sol_entry_size = round(usdt_entry_size / last_close,2)
 
-            if last_close <= bb['lower'] and rsi <= rsi_lower:
+            if prev_close < bb['lower'] and last_close > bb['lower'] and rsi >= rsi_lower:
                 
                 logging.info("Close price lower than lower bollinger band ... Entering LONG")
                 logging.info(f"Close price: {last_close}")
@@ -93,7 +117,7 @@ async def main():
                 }
 
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
                     logging.info("MARKET IN Trade logged to Supabase")
                 
                 except Exception as e:
@@ -129,7 +153,7 @@ async def main():
                 # Breakeven calculations
                 # breakeven_indicator = round(actual_entry_price + (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price + (actual_entry_price * fee / 100),2)
-                breakeven_indicator = breakeven_price + 0.05
+                breakeven_indicator = breakeven_price + breakeven_buffer
 
                 # Log SL into DB 
                 data = {
@@ -141,7 +165,7 @@ async def main():
                     "breakeven_price": breakeven_price
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
                     logging.info("STOPLOSS Trade logged to Supabase")
                 
                 except Exception as e:
@@ -158,14 +182,14 @@ async def main():
                     "breakeven_price": 0.00
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
                     logging.info("TAKEPROFIT Trade logged to Supabase")
                 
                 except Exception as e:
                     logging.error(f"Failed to log TAKEPROFIT trade to Supabase: {e}")
 
 
-            elif last_close >= bb['upper'] and rsi >= rsi_upper:
+            elif prev_close > bb['upper'] and last_close < bb['upper'] and rsi < rsi_upper:
 
                 logging.info("Close price higher than upper bollinger band ... Entering SHORT")
                 logging.info(f"Close price: {last_close}")
@@ -190,7 +214,7 @@ async def main():
                     "breakeven_price": 0.00
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
                     logging.info("MARKET IN Trade logged to Supabase")
                 
                 except Exception as e:
@@ -222,7 +246,7 @@ async def main():
                 # Breakeven calculations
                 # breakeven_indicator = round(actual_entry_price - (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price - (actual_entry_price * fee / 100),2)
-                breakeven_indicator = breakeven_price - 0.05 
+                breakeven_indicator = breakeven_price - breakeven_buffer 
 
                 # Log SL into DB 
                 # Log SL into DB 
@@ -235,7 +259,7 @@ async def main():
                     "breakeven_price": breakeven_price
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
                     logging.info("STOPLOSS Trade logged to Supabase")
                 
                 except Exception as e:
@@ -252,7 +276,7 @@ async def main():
                     "breakeven_price": 0.00
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
                     logging.info("TAKEPROFIT Trade logged to Supabase")
                 
                 except Exception as e:
