@@ -6,7 +6,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def log_into_supabase(data, supabase_url, api_key, jwt, table_name="order_groups"):
+orders_table = "orders" if os.getenv("STRATEGY_ENV") == 1 else "orders2"
+order_groups_table = "order_groups" if os.getenv("STRATEGY_ENV") == 1 else "order_groups2"
+trades_table = "trades" if os.getenv("STRATEGY_ENV") == 1 else "trades2"
+
+def log_into_supabase(data, supabase_url, api_key, jwt, table_name=order_groups_table):
     logging.info(f"Attempting to log the following data into supabase: {data}")
     url = f"{supabase_url}/rest/v1/{table_name}"
     headers = {
@@ -26,7 +30,7 @@ def log_into_supabase(data, supabase_url, api_key, jwt, table_name="order_groups
         return {"error": response.text, "status_code": response.status_code}
     
 
-def get_latest_group_id(supabase_url, api_key, jwt, table_name="order_groups"):
+def get_latest_group_id(supabase_url, api_key, jwt, table_name=order_groups_table):
     '''
     Returns the latest group_id present in the orders_group table. 
     If no records/invalid records, return 0.
@@ -62,7 +66,7 @@ def get_latest_group_id(supabase_url, api_key, jwt, table_name="order_groups"):
         logging.error(f"❌ Failed to fetch latest group_id ({response.status_code}): {response.text}")
         return 0
     
-def get_latest_trades(supabase_url, api_key, jwt, table_name="trades"):
+def get_latest_trades(supabase_url, api_key, jwt, table_name=trades_table):
     '''
     Returns the most recent trades in trades table 
     If no trades, return None
@@ -93,10 +97,7 @@ def get_latest_trades(supabase_url, api_key, jwt, table_name="trades"):
         logging.error(f"❌ Failed to fetch latest trades ({response.status_code}): {response.text}")
         return None
     
-supabase_url = os.getenv("SUPABASE_URL")
-order_table_name = os.getenv("ORDER_TABLE")
-supabase_api_key = os.getenv("SUPABASE_API_KEY")
-supbase_jwt = os.getenv("SUPABASE_JWT")
+
    
 if __name__ == '__main__':
     supabase_url = os.getenv("SUPABASE_URL")
@@ -104,5 +105,5 @@ if __name__ == '__main__':
     supabase_api_key = os.getenv("SUPABASE_API_KEY")
     supbase_jwt = os.getenv("SUPABASE_JWT")
 
-    test = get_latest_trade_time(supabase_url,supabase_api_key,supbase_jwt)
+    test = get_latest_trades(supabase_url,supabase_api_key,supbase_jwt)
     print(test)

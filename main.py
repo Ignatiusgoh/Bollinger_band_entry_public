@@ -117,7 +117,7 @@ async def main():
                 }
 
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
                     logging.info("MARKET IN Trade logged to Supabase")
                 
                 except Exception as e:
@@ -165,7 +165,7 @@ async def main():
                     "breakeven_price": breakeven_price
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
                     logging.info("STOPLOSS Trade logged to Supabase")
                 
                 except Exception as e:
@@ -182,7 +182,7 @@ async def main():
                     "breakeven_price": 0.00
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
                     logging.info("TAKEPROFIT Trade logged to Supabase")
                 
                 except Exception as e:
@@ -214,7 +214,7 @@ async def main():
                     "breakeven_price": 0.00
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
                     logging.info("MARKET IN Trade logged to Supabase")
                 
                 except Exception as e:
@@ -259,7 +259,7 @@ async def main():
                     "breakeven_price": breakeven_price
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
                     logging.info("STOPLOSS Trade logged to Supabase")
                 
                 except Exception as e:
@@ -276,7 +276,7 @@ async def main():
                     "breakeven_price": 0.00
                 }
                 try:
-                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt, table_name=order_table_name)
+                    log_into_supabase(data, supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
                     logging.info("TAKEPROFIT Trade logged to Supabase")
                 
                 except Exception as e:
