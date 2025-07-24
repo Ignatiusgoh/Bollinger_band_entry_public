@@ -80,9 +80,10 @@ async def main():
         #######
         # Max concurrent trades
         #######
-        open_trades = sum(1 for trade in recent_trades if not trade['is_closed'])
-        if open_trades > max_concurrent_trades: 
-            continue
+        if recent_trades: 
+            open_trades = sum(1 for trade in recent_trades if not trade['is_closed'])
+            if open_trades > max_concurrent_trades: 
+                continue
 
         if percentage_at_risk < portfolio_threshold: 
             

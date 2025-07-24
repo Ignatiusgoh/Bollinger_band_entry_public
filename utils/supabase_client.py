@@ -88,7 +88,6 @@ def get_latest_trades(supabase_url, api_key, jwt, table_name=trades_table):
 
     if response.status_code == 200:
         results = response.json()
-        print(results)
         if results:
             return results
         else:
