@@ -16,20 +16,35 @@ supabase_url = os.getenv("SUPABASE_URL")
 order_table_name = os.getenv("ORDER_TABLE")
 supabase_api_key = os.getenv("SUPABASE_API_KEY")
 supbase_jwt = os.getenv("SUPABASE_JWT")
+strategy = int(os.getenv("STRATEGY_ENV"))
 
 symbol = "SOLUSDT"
 interval = "5m"
-risk_amount = 2
-sl_percentage = 0.5
-fee = 0.08
-portfolio_threshold = 20
-rsi_lower = 30
-rsi_upper = 70
-sma_period = 30
-bb_std_dev = 2
-breakeven_buffer = 0.03
-rsi_period = 7
-max_concurrent_trades = 3
+
+if strategy == 1: 
+    risk_amount = 15
+    sl_percentage = 1.1
+    fee = 0.1
+    portfolio_threshold = 20
+    rsi_lower = 30
+    rsi_upper = 70
+    sma_period = 20
+    bb_std_dev = 2
+    breakeven_buffer = 0.05
+    rsi_period = 14
+    max_concurrent_trades = 100
+else: 
+    risk_amount = 2
+    sl_percentage = 0.5
+    fee = 0.1
+    portfolio_threshold = 20
+    rsi_lower = 30
+    rsi_upper = 70
+    sma_period = 30
+    bb_std_dev = 2
+    breakeven_buffer = 0.03
+    rsi_period = 7
+    max_concurrent_trades = 3
 
 usdt_entry_size = risk_amount / ((sl_percentage + fee) / 100)
 trade = execute.BinanceFuturesTrader()
@@ -69,7 +84,7 @@ async def main():
         # Ensure no trades made within the next 5 mins after a loss 
         #######
         
-        if recent_trades and recent_trades[0]['is_closed'] == True:
+        if recent_trades and recent_trades[0]['is_closed'] == True and strategy == 2:
             if recent_trades[0]['realised_pnl'] < 0:
                 last_exit_time = datetime.strptime(recent_trades[0]['exit_time'], "%Y-%m-%dT%H:%M:%S.%f")
                 now = datetime.utcnow()
@@ -80,7 +95,7 @@ async def main():
         #######
         # Max concurrent trades
         #######
-        if recent_trades: 
+        if recent_trades and strategy == 2: 
             open_trades = sum(1 for trade in recent_trades if not trade['is_closed'])
             if open_trades > max_concurrent_trades: 
                 continue
