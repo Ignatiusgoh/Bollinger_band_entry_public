@@ -84,8 +84,8 @@ async def main():
         # Ensure no trades made within the next 5 mins after a loss 
         #######
         
-        if recent_trades and recent_trades[0]['realised_pnl'] and recent_trades[0]['is_closed'] == True and strategy == 2:
-            if recent_trades[0]['realised_pnl'] < 0:
+        if recent_trades and recent_trades[0]['realized_pnl'] and recent_trades[0]['is_closed'] == True and strategy == 2:
+            if recent_trades[0]['realized_pnl'] < 0:
                 last_exit_time = datetime.strptime(recent_trades[0]['exit_time'], "%Y-%m-%dT%H:%M:%S.%f")
                 now = datetime.utcnow()
                 difference_seconds = (now - last_exit_time).total_seconds()
