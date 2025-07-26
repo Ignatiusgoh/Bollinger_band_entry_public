@@ -32,7 +32,7 @@ if strategy == 1:
     bb_std_dev = 2
     breakeven_buffer = 0.05
     rsi_period = 14
-    max_concurrent_trades = 100
+    max_concurrent_trades = 8
 else: 
     risk_amount = 2
     sl_percentage = 0.5
@@ -84,7 +84,7 @@ async def main():
         # Ensure no trades made within the next 5 mins after a loss 
         #######
         
-        if recent_trades and recent_trades[0]['is_closed'] == True and strategy == 2:
+        if recent_trades and recent_trades[0]['realised_pnl'] and recent_trades[0]['is_closed'] == True and strategy == 2:
             if recent_trades[0]['realised_pnl'] < 0:
                 last_exit_time = datetime.strptime(recent_trades[0]['exit_time'], "%Y-%m-%dT%H:%M:%S.%f")
                 now = datetime.utcnow()
@@ -109,7 +109,7 @@ async def main():
 
             strategy_condition_long  = (prev_close < bb['lower'] and last_close > bb['lower'] and rsi >= rsi_lower ) if strategy == 2 else (last_close <= bb['lower'] and rsi <= rsi_lower)
             strategy_condition_short = (prev_close > bb['upper'] and last_close < bb['upper'] and rsi < rsi_upper) if strategy == 2 else (last_close >= bb['upper'] and rsi >= rsi_upper)
-            
+
             if strategy_condition_long:                
                 logging.info("Close price lower than lower bollinger band ... Entering LONG")
                 logging.info(f"Close price: {last_close}")

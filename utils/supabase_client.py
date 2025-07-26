@@ -81,7 +81,7 @@ def get_latest_trades(supabase_url, api_key, jwt, table_name=trades_table):
     params = {
         "select": "entry_time,exit_time,is_closed,realized_pnl",
         "order": "entry_time.desc",
-        "limit": 5
+        "limit": 10
     }
 
     response = requests.get(url, headers=headers, params=params)
