@@ -107,8 +107,10 @@ async def main():
             prev_close = cache.candles[-2]['close']
             sol_entry_size = round(usdt_entry_size / last_close,2)
 
-            if prev_close < bb['lower'] and last_close > bb['lower'] and rsi >= rsi_lower:
-                
+            strategy_condition_long  = (prev_close < bb['lower'] and last_close > bb['lower'] and rsi >= rsi_lower ) if strategy == 2 else (last_close <= bb['lower'] and rsi <= rsi_lower)
+            strategy_condition_short = (prev_close > bb['upper'] and last_close < bb['upper'] and rsi < rsi_upper) if strategy == 2 else (last_close >= bb['upper'] and rsi >= rsi_upper)
+            
+            if strategy_condition_long:                
                 logging.info("Close price lower than lower bollinger band ... Entering LONG")
                 logging.info(f"Close price: {last_close}")
                 logging.info(f"Lower bollinger band: {bb['lower']}")
@@ -205,8 +207,8 @@ async def main():
                 except Exception as e:
                     logging.error(f"Failed to log TAKEPROFIT trade to Supabase: {e}")
 
-
-            elif prev_close > bb['upper'] and last_close < bb['upper'] and rsi < rsi_upper:
+            
+            elif strategy_condition_short:
 
                 logging.info("Close price higher than upper bollinger band ... Entering SHORT")
                 logging.info(f"Close price: {last_close}")
