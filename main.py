@@ -78,6 +78,13 @@ async def main():
         logging.info(f"Portfolio risk: {percentage_at_risk}")
 
         recent_trades = get_latest_trades(supabase_url=supabase_url, api_key=supabase_api_key, jwt=supbase_jwt)
+        order_count = binance.get_total_open_order()
+        
+        #######
+        # Checking if there are more than 10 open orders
+        #######
+        if order_count >= 10: 
+            continue
         
         #######
         # Cooldown after loss 
@@ -99,6 +106,7 @@ async def main():
             open_trades = sum(1 for trade in recent_trades if not trade['is_closed'])
             if open_trades > max_concurrent_trades: 
                 continue
+  
 
         if percentage_at_risk < portfolio_threshold: 
             
@@ -106,6 +114,7 @@ async def main():
             last_close = cache.candles[-1]['close']
             prev_close = cache.candles[-2]['close']
             sol_entry_size = round(usdt_entry_size / last_close,2)
+            sma = round(bb['sma'],2)
 
             strategy_condition_long  = (prev_close < bb['lower'] and last_close > bb['lower'] and rsi >= rsi_lower ) if strategy == 2 else (last_close <= bb['lower'] and rsi <= rsi_lower)
             strategy_condition_short = (prev_close > bb['upper'] and last_close < bb['upper'] and rsi < rsi_upper) if strategy == 2 else (last_close >= bb['upper'] and rsi >= rsi_upper)
@@ -114,6 +123,9 @@ async def main():
                 logging.info("Close price lower than lower bollinger band ... Entering LONG")
                 logging.info(f"Close price: {last_close}")
                 logging.info(f"Lower bollinger band: {bb['lower']}")
+
+                if (sma - last_close) < 0.5: ## this ensures that there is a reasonable gap between the SMA (TP) and the entry price, such that it will not enter if we are too close to TP 
+                    continue
 
                 try:
                     logging.info(f"Quantity: {sol_entry_size}")
@@ -146,8 +158,7 @@ async def main():
                 actual_entry_price = binance.entry_price(market_in_order_id)
 
                 stoploss_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
-                # takeprofit_price = round(actual_entry_price + (actual_entry_price * tp_percentage / 100),2)
-                takeprofit_price = round(bb['sma'],2)
+                takeprofit_price = sma
 
                 try: 
                     stoploss_order = trade.set_stop_loss(symbol=symbol, side="SELL", stop_price=stoploss_price, quantity=sol_entry_size)
@@ -170,7 +181,6 @@ async def main():
                     return e
                 
                 # Breakeven calculations
-                # breakeven_indicator = round(actual_entry_price + (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price + (actual_entry_price * fee / 100),2)
                 breakeven_indicator = breakeven_price + breakeven_buffer
 
@@ -210,6 +220,9 @@ async def main():
             
             elif strategy_condition_short:
 
+                if (last_close - sma) < 0.5: ## this ensures that there is a reasonable gap between the SMA (TP) and the entry price, such that it will not enter if we are too close to TP 
+                    continue
+
                 logging.info("Close price higher than upper bollinger band ... Entering SHORT")
                 logging.info(f"Close price: {last_close}")
                 logging.info(f"Upper bollinger band: {bb['upper']}")
@@ -243,8 +256,7 @@ async def main():
                 actual_entry_price = binance.entry_price(market_in_order_id)
                 
                 stoploss_price = round(actual_entry_price + (actual_entry_price * sl_percentage / 100),2)
-                # takeprofit_price = round(actual_entry_price - (actual_entry_price * sl_percentage / 100),2)
-                takeprofit_price = round(bb['sma'],2) 
+                takeprofit_price = sma
 
                 try:
                     stoploss_order = trade.set_stop_loss(symbol=symbol, side="BUY", stop_price=stoploss_price, quantity=sol_entry_size)
@@ -263,7 +275,6 @@ async def main():
                     return e
                 
                 # Breakeven calculations
-                # breakeven_indicator = round(actual_entry_price - (actual_entry_price * breakeven_indicator_percentage / 100),2)
                 breakeven_price = round(actual_entry_price - (actual_entry_price * fee / 100),2)
                 breakeven_indicator = breakeven_price - breakeven_buffer 
 
