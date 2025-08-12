@@ -80,4 +80,4 @@ def get_total_open_order():
 
 
 if __name__ == '__main__':
-    print(get_total_open_order)
+    print(get_total_open_order())
