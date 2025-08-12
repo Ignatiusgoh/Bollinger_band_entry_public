@@ -69,3 +69,15 @@ def entry_price(order_id):
             logging.warning(f"⚠️ Error fetching positions: {e}. Retrying")
             time.sleep(0.1)
 
+def get_total_open_order():
+    while True: 
+        try: 
+            open_orders = client.futures_get_open_orders()
+            return len(open_orders)
+        except Exception as e: 
+            logging.warning(f"⚠️ Error fetching open orders: {e}. Retrying")
+            time.sleep(0.1)
+
+
+if __name__ == '__main__':
+    print(get_total_open_order)
