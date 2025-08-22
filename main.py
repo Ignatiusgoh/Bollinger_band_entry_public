@@ -113,11 +113,28 @@ async def main():
             logging.info(f"Portfolio risk: {percentage_at_risk} percent lower than threshold: {portfolio_threshold}, looking for entry")
             last_close = cache.candles[-1]['close']
             prev_close = cache.candles[-2]['close']
+
+            prev_rsi = cache.get_previous_rsi()  
+
             sol_entry_size = round(usdt_entry_size / last_close,2)
             sma = round(bb['sma'],2)
 
-            strategy_condition_long  = (prev_close < bb['lower'] and last_close > bb['lower'] and rsi >= rsi_lower ) if strategy == 2 else (last_close <= bb['lower'] and rsi <= rsi_lower)
-            strategy_condition_short = (prev_close > bb['upper'] and last_close < bb['upper'] and rsi < rsi_upper) if strategy == 2 else (last_close >= bb['upper'] and rsi >= rsi_upper)
+            strategy_condition_long = (
+                (prev_close < bb['lower'] and last_close > bb['lower'] and 
+                rsi > rsi_lower and prev_rsi < rsi_lower and 
+                (rsi - prev_rsi) > 10)
+                if strategy == 2 
+                else (last_close <= bb['lower'] and rsi <= rsi_lower)
+            )
+
+            strategy_condition_short = (
+                (prev_close > bb['upper'] and last_close < bb['upper'] and 
+                rsi < rsi_upper and prev_rsi > rsi_upper and 
+                (prev_rsi - rsi) > 10)
+                if strategy == 2 
+                else (last_close >= bb['upper'] and rsi >= rsi_upper)
+            )
+
 
             if strategy_condition_long:                
                 logging.info("Close price lower than lower bollinger band ... Entering LONG")

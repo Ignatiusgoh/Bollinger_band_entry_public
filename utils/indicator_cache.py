@@ -6,12 +6,18 @@ class CandleCache:
     def __init__(self, max_candles: int = 200, volume_period: int = 12, historical_data: list = None):
         self.candles = deque(maxlen=max_candles)
         self.volume_period = volume_period
-
+        self.rsi_values = deque(maxlen=10)  # Store last 10 RSI values
+        
         # If historical data is passed, add it to the candles deque
         if historical_data:
             for candle in historical_data:
                 if candle['close_time'] < int(time.time() * 1000):
                     self.add_candle(candle)
+                    # Calculate and store initial RSI values
+                    if len(self.candles) >= 15:  # Minimum needed for RSI
+                        rsi = self.calculate_rsi()
+                        if rsi is not None:
+                            self.rsi_values.append(rsi)
 
     def add_candle(self, candle: dict):
         """ Add a new candle to the cache. """
@@ -73,7 +79,21 @@ class CandleCache:
 
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
+
+        self.rsi_values.append(rsi)  # Store the latest RSI value
         return rsi
+    
+    def get_previous_rsi(self):
+        """Get the previous RSI value without recalculating"""
+        if len(self.rsi_values) >= 2:
+            return list(self.rsi_values)[-2]  # Return second-to-last RSI value
+        return None
+    
+    def get_current_rsi(self):
+        """Get the most recent RSI value"""
+        if len(self.rsi_values) > 0:
+            return self.rsi_values[-1]
+        return None
 
     def calculate_relative_volume(self):
         """ Calculate the Relative Volume (RV) based on the last 'volume_period' candles. """
